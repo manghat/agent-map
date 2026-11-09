@@ -4,7 +4,7 @@
 
 If you use Claude Code with more than one account, plus Codex, Cursor or Gemini, plus `npx skills`, plugins and a few hand-copied `SKILL.md` folders, you probably can't say which skills each agent actually loads. `agent-map` scans your machine and draws it on one local page.
 
-![agent-map on a demo machine](docs/demo-map.png)
+![agent-map walkthrough on a demo machine](docs/walkthrough.gif)
 
 ```bash
 npx @manghat/agent-map --demo   # try it on a made-up machine
@@ -21,6 +21,8 @@ Needs Node 18+ and nothing else: no dependencies, no install. Nothing is uploade
 - **Projects:** every folder an agent has opened, with its project-level skills, `.mcp.json`, plugins, Vercel link and Neon endpoints.
 - **CLIs & accounts:** which account Neon, Vercel, GitHub, gcloud, AWS, Supabase, Modal, Turso, Convex and wrangler are logged in as, and which alias pins which one.
 - **Cleanup:** concrete suggestions, for example the same skill loaded twice in one profile, a plugin enabled but never installed, byte-identical copies that should be a symlink, or two drifted versions of one skill. Nothing is changed for you.
+
+![the map](docs/demo-map.png)
 
 ![cleanup suggestions](docs/demo-cleanup.png)
 
