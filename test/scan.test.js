@@ -148,7 +148,7 @@ describe('cli', () => {
   });
 
   test('--help and bad flags', () => {
-    assert.match(execFileSync(process.execPath, [path.join(ROOT, 'bin', 'agent-map.js'), '--help'], { encoding: 'utf8' }), /npx agent-map/);
+    assert.match(execFileSync(process.execPath, [path.join(ROOT, 'bin', 'agent-map.js'), '--help'], { encoding: 'utf8' }), /npx @manghat\/agent-map/);
     assert.throws(() => execFileSync(process.execPath, [path.join(ROOT, 'bin', 'agent-map.js'), '--nope'], { stdio: 'pipe' }));
   });
 });

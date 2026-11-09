@@ -12,7 +12,7 @@ import { VERSION } from './version.js';
 const HELP = `agent-map ${VERSION}
 See every Claude Code profile, skill, plugin, MCP server and CLI login on this machine.
 
-Usage: npx agent-map [options]
+Usage: npx @manghat/agent-map [options]
 
   --redact      replace emails, orgs, account ids, profile names, hostname and project paths
   --demo        map a made-up machine instead of yours

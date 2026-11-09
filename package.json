@@ -1,5 +1,5 @@
 {
-  "name": "agent-map",
+  "name": "@manghat/agent-map",
   "version": "0.3.0",
   "description": "See every Claude Code profile, skill, plugin, MCP server and CLI login on your machine, in one local HTML map.",
   "type": "module",
@@ -35,5 +35,8 @@
     "url": "git+https://github.com/manghat/agent-map.git"
   },
   "homepage": "https://github.com/manghat/agent-map#readme",
-  "bugs": "https://github.com/manghat/agent-map/issues"
+  "bugs": "https://github.com/manghat/agent-map/issues",
+  "publishConfig": {
+    "access": "public"
+  }
 }
