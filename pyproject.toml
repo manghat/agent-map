@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "agent-map"
+dynamic = ["version"]
+description = "See every Claude Code profile, skill, plugin, MCP server and CLI login on your machine, in one local HTML map."
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "Ashwin Manghat" }]
+requires-python = ">=3.9"
+dependencies = []
+keywords = ["claude-code", "agent-skills", "skills", "mcp", "codex", "cursor", "developer-tools"]
+classifiers = [
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: MacOS",
+  "Operating System :: POSIX :: Linux",
+  "Programming Language :: Python :: 3",
+  "Topic :: Software Development",
+]
+
+[project.urls]
+Homepage = "https://github.com/manghat/agent-map"
+Issues = "https://github.com/manghat/agent-map/issues"
+
+[project.scripts]
+agent-map = "agent_map.scan:main"
+
+[tool.setuptools]
+packages = ["agent_map"]
+
+[tool.setuptools.package-data]
+agent_map = ["template.html"]
+
+[tool.setuptools.dynamic]
+version = { attr = "agent_map.__version__" }

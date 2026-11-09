@@ -1,0 +1,639 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agent Map</title>
+<style>
+:root{
+  --bg:#f6f5f2; --panel:#ffffff; --panel2:#f0efeb; --ink:#1d1c1a; --muted:#6b6862; --line:#dedbd4;
+  --accent:#b4552d; --accent-soft:#f5e3d9;
+  --c-store:#2f6fb0; --c-own:#6b6862; --c-plugin:#7a4fb5; --c-synced:#1f8a70; --c-gstack:#b07a1f; --c-link:#2f6fb0; --c-proj:#a8452f;
+  --warn:#b7791f; --warn-soft:#fbf0d9; --bad:#b83a3a; --bad-soft:#f8e1e1; --ok:#2e7d4f; --ok-soft:#dff0e5;
+  --shadow:0 1px 2px rgba(0,0,0,.05),0 2px 8px rgba(0,0,0,.04);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#161614; --panel:#1f1f1c; --panel2:#282825; --ink:#ecebe6; --muted:#a09d95; --line:#34332f;
+    --accent:#e58a5f; --accent-soft:#3a2a21;
+    --c-store:#6fa8e6; --c-own:#a09d95; --c-plugin:#b596e6; --c-synced:#4fc1a0; --c-gstack:#dcae5a; --c-link:#6fa8e6; --c-proj:#e0826b;
+    --warn:#e0b050; --warn-soft:#3a3120; --bad:#e57373; --bad-soft:#3b2222; --ok:#6cc58f; --ok-soft:#1f3326;
+    --shadow:none;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#161614; --panel:#1f1f1c; --panel2:#282825; --ink:#ecebe6; --muted:#a09d95; --line:#34332f;
+  --accent:#e58a5f; --accent-soft:#3a2a21;
+  --c-store:#6fa8e6; --c-own:#a09d95; --c-plugin:#b596e6; --c-synced:#4fc1a0; --c-gstack:#dcae5a; --c-link:#6fa8e6; --c-proj:#e0826b;
+  --warn:#e0b050; --warn-soft:#3a3120; --bad:#e57373; --bad-soft:#3b2222; --ok:#6cc58f; --ok-soft:#1f3326;
+  --shadow:none;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+code,.mono{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:12.5px}
+a{color:var(--accent)}
+header{padding:20px 24px 0;max-width:1400px;margin:0 auto}
+h1{font-size:22px;margin:0 0 2px;letter-spacing:-.01em}
+.sub{color:var(--muted);font-size:13px}
+.sub code{background:var(--panel2);padding:1px 5px;border-radius:4px}
+nav{display:flex;gap:4px;margin-top:16px;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none}
+nav::-webkit-scrollbar{display:none}
+nav button{all:unset;cursor:pointer;padding:8px 12px;color:var(--muted);border-bottom:2px solid transparent;font-weight:500;white-space:nowrap}
+nav button:hover{color:var(--ink)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+.banner{display:flex;gap:8px;align-items:center;margin-top:12px;padding:8px 12px;border-radius:8px;font-size:12.5px;background:var(--accent-soft);color:var(--ink)}
+.banner b{color:var(--accent)}
+.hero{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:4px 0 6px}
+.hero a{all:unset;cursor:pointer;display:block;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;box-shadow:var(--shadow)}
+.hero a:hover{border-color:var(--accent)}
+.hero b{display:block;font-size:28px;line-height:1.1;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.hero span{color:var(--muted);font-size:12.5px}
+.hero a.warn b{color:var(--warn)}
+footer{max-width:1400px;margin:0 auto;padding:0 24px 40px;color:var(--muted);font-size:12px}
+.copy{all:unset;cursor:pointer;float:right;font:11px ui-sans-serif,system-ui,sans-serif;color:var(--muted);border:1px solid var(--line);border-radius:5px;padding:1px 7px;margin:-2px -2px 0 8px;background:var(--panel)}
+.copy:hover{color:var(--ink)}
+nav button[aria-selected="true"]{color:var(--ink);border-color:var(--accent)}
+nav button .n{font-size:11px;background:var(--panel2);border-radius:9px;padding:1px 6px;margin-left:4px;color:var(--muted)}
+main{max-width:1400px;margin:0 auto;padding:18px 24px 60px}
+section[hidden]{display:none}
+.grid{display:grid;gap:12px}
+.cards{grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;box-shadow:var(--shadow);min-width:0}
+.card h3{margin:0 0 2px;font-size:15px}
+.card .meta{color:var(--muted);font-size:12.5px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:3px 10px;font-size:12.5px;margin-top:8px}
+.kv dt{color:var(--muted)} .kv dd{margin:0;overflow-wrap:anywhere}
+.stat{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:12px}
+.stat div{font-size:12px;color:var(--muted);white-space:nowrap} .stat b{display:block;font-size:18px;color:var(--ink);font-variant-numeric:tabular-nums}
+.chip{display:inline-block;font-size:11.5px;line-height:16px;padding:1px 7px;border-radius:10px;background:var(--panel2);border:1px solid var(--line);margin:1px 2px 1px 0;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis;vertical-align:middle}
+.chip.store{color:var(--c-store)} .chip.plugin{color:var(--c-plugin)} .chip.synced{color:var(--c-synced)} .chip.gstack{color:var(--c-gstack)} .chip.own{color:var(--c-own)} .chip.proj{color:var(--c-proj)}
+.chip.off{opacity:.5;text-decoration:line-through}
+.chip.warn{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+.chip.bad{background:var(--bad-soft);color:var(--bad);border-color:transparent}
+.chip.ok{background:var(--ok-soft);color:var(--ok);border-color:transparent}
+.chip.acct{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+h2{font-size:16px;margin:26px 0 10px}
+h2:first-child{margin-top:4px}
+.hint{color:var(--muted);font-size:12.5px;margin:-4px 0 12px;max-width:900px}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+input[type=search]{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:7px;padding:7px 10px;min-width:240px;font:inherit}
+label.tog{display:flex;gap:6px;align-items:center;font-size:13px;color:var(--muted);cursor:pointer}
+select{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:7px;padding:6px 8px;font:inherit}
+.tablewrap{overflow:auto;border:1px solid var(--line);border-radius:10px;background:var(--panel);max-height:72vh}
+table{border-collapse:separate;border-spacing:0;width:100%;font-size:12.5px}
+th,td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+thead th{position:sticky;top:0;background:var(--panel2);z-index:2;font-weight:600;white-space:nowrap}
+th.rot{height:120px;vertical-align:bottom;padding:4px 2px}
+th.rot span{writing-mode:vertical-rl;transform:rotate(180deg);font-weight:600;white-space:nowrap}
+td.name{position:sticky;left:0;background:var(--panel);z-index:1;font-family:ui-monospace,Menlo,monospace;white-space:nowrap}
+thead th.name{left:0;z-index:3}
+td.cell{text-align:center;white-space:nowrap;min-width:34px}
+td.cell.conflict{background:var(--warn-soft)}
+.dot{display:inline-block;min-width:18px;height:18px;line-height:18px;border-radius:4px;font-size:10.5px;font-weight:700;color:#fff;padding:0 3px;margin:0 1px;cursor:help}
+.dot.store{background:var(--c-store)} .dot.own{background:var(--c-own)} .dot.link{background:var(--c-link);opacity:.75} .dot.plugin{background:var(--c-plugin)}
+.dot.synced{background:var(--c-synced)} .dot.gstack{background:var(--c-gstack)} .dot.proj{background:var(--c-proj)} .dot.off{background:transparent;color:var(--muted);border:1px dashed var(--muted)}
+tr.grp td{background:var(--panel2);font-weight:600;color:var(--muted);font-size:11.5px;text-transform:uppercase;letter-spacing:.04em}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-bottom:10px}
+.legend span{display:flex;align-items:center;gap:5px}
+.issues{display:grid;gap:8px}
+.issue{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--warn);border-radius:8px;padding:10px 12px}
+.issue.info{border-left-color:var(--c-store)} .issue.bad{border-left-color:var(--bad)}
+.issue h4{margin:0 0 4px;font-size:13.5px}
+.issue p{margin:0;color:var(--muted);font-size:12.5px}
+.issue pre{margin:8px 0 0;background:var(--panel2);padding:8px;border-radius:6px;overflow:auto;font-size:12px;white-space:pre-wrap}
+details summary{cursor:pointer;color:var(--muted);font-size:12.5px;margin-top:6px}
+.diagram{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px;overflow-x:auto}
+.diagram svg{display:block;min-width:900px;width:100%;height:auto}
+.diagram text{fill:var(--ink);font-size:12px;font-family:inherit}
+.diagram .sm{fill:var(--muted);font-size:10.5px}
+.diagram .col{fill:var(--muted);font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.diagram rect.node{fill:var(--panel2);stroke:var(--line)}
+.diagram g.n{cursor:pointer}
+.diagram g.n:hover rect.node,.diagram g.n.hot rect.node{stroke:var(--accent);stroke-width:1.5}
+.diagram path.e{fill:none;stroke-opacity:.35;transition:stroke-opacity .15s}
+.diagram path.e.hot{stroke-opacity:.95}
+.diagram path.e.dim{stroke-opacity:.06}
+.diagram text.el{font-size:10px;fill:var(--muted);opacity:0}
+.diagram text.el.hot{opacity:1}
+.bar{height:6px;border-radius:3px;background:var(--panel2);overflow:hidden;display:flex;margin-top:8px}
+.bar i{display:block;height:100%}
+.muted{color:var(--muted)}
+.small{font-size:12px}
+.pill-row{display:flex;flex-wrap:wrap;gap:2px}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.themebtn{all:unset;float:right;cursor:pointer;color:var(--muted);font-size:12px;border:1px solid var(--line);border-radius:6px;padding:3px 8px}
+.themebtn:hover{color:var(--ink)}
+@media (max-width:760px){header,main,footer{padding-left:16px;padding-right:16px}.split{grid-template-columns:1fr}input[type=search]{min-width:0;width:100%}.hero b{font-size:22px}}
+</style>
+</head>
+<body>
+<header>
+  <button class="themebtn" id="themebtn" title="Toggle theme">◐ theme</button>
+  <h1>Agent Map</h1>
+  <div class="sub" id="sub"></div>
+  <div id="banner"></div>
+  <nav id="tabs" role="tablist"></nav>
+</header>
+<main id="main"></main>
+<footer id="foot"></footer>
+
+<script>
+const DATA = /*__DATA__*/null;
+const $ = (s, el=document) => el.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const plural = (n, w) => `${n} ${w}${n===1?"":"s"}`;
+const verb = (n, one, many) => n === 1 ? one : many;
+
+/* theme toggle (per-viewer convenience) */
+(() => {
+  const r = document.documentElement;
+  try { const t = localStorage.getItem("agentmap-theme"); if (t) r.dataset.theme = t; } catch {}
+  $("#themebtn").onclick = () => {
+    const dark = r.dataset.theme ? r.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+    r.dataset.theme = dark ? "light" : "dark";
+    try { localStorage.setItem("agentmap-theme", r.dataset.theme); } catch {}
+  };
+})();
+
+if (!DATA) { document.body.innerHTML = "<main><h2>No data.</h2><p>Run <code>agent-map</code> to generate this page.</p></main>"; throw 0; }
+
+/* ───────────── derive a flat index of every skill instance ───────────── */
+const P = DATA.profiles, A = DATA.agents, S = DATA.stores, PR = DATA.projects.filter(p => p.exists);
+const STORE_PREFIX = "~/.agents/skills/";
+const instances = [];   // {name, col, via, where, detail, hash, path}
+const hashOwner = {};   // hash -> label of canonical source (store / plugin)
+
+for (const st of S) for (const s of st.skills) {
+  instances.push({name:s.name, col:"store", via:"store", where:st.label, detail:s.source||"", hash:s.hash, path:s.path});
+  hashOwner[s.hash] ??= `~/.agents/skills (${s.source||"?"})`;
+}
+for (const pr of P) for (const pl of pr.plugins) for (const s of pl.skills) hashOwner[s.hash] ??= `plugin ${pl.name}`;
+
+function viaFor(s) {
+  if (s.link) return "link";
+  if (s.gstack) return "gstack";
+  return "own";
+}
+for (const pr of P) {
+  for (const s of pr.skills) instances.push({name:s.name, col:pr.id, via:viaFor(s), where:`${pr.dir}/skills`, detail:s.link?`→ ${s.real}`:(hashOwner[s.hash]?`identical copy of ${hashOwner[s.hash]}`:""), hash:s.hash, path:s.path, copyOf: !s.link && hashOwner[s.hash]});
+  for (const s of pr.synced) instances.push({name:s.name, col:pr.id, via:"synced", where:"claude.ai synced skills", detail:"synced from your claude.ai account", hash:s.hash, path:s.path});
+  for (const pl of pr.plugins) {
+    const active = pl.scope === "user" ? pl.enabled : null;
+    for (const s of pl.skills) {
+      if (pl.scope === "user") instances.push({name:s.name, col:pr.id, via: active ? "plugin" : "off", where:`plugin ${pl.id}`, detail: active ? `/${pl.name}:${s.name}` : "installed but disabled", hash:s.hash, path:s.path, plugin:pl.name});
+      else instances.push({name:s.name, col:"projects", via:"plugin", where:`plugin ${pl.name} (project: ${pl.projectPath})`, detail:`profile ${pr.id}`, hash:s.hash, path:s.path, plugin:pl.name});
+    }
+  }
+}
+for (const ag of A) for (const s of ag.skills) instances.push({name:s.name, col:ag.id, via:s.link?"link":(s.gstack?"gstack":"own"), where:ag.label, detail:s.link?`→ ${s.real}`:(hashOwner[s.hash]?`identical copy of ${hashOwner[s.hash]}`:""), hash:s.hash, path:s.path, copyOf: !s.link && hashOwner[s.hash]});
+for (const p of PR) {
+  for (const s of p.skills||[]) instances.push({name:s.name, col:"projects", via:s.link?"link":"proj", where:`${p.path}/.claude/skills`, detail:p.path, hash:s.hash, path:s.path, project:p.path});
+  for (const s of p.agentsSkills||[]) instances.push({name:s.name, col:"projects", via:s.link?"link":"proj", where:`${p.path}/.agents/skills`, detail:p.path, hash:s.hash, path:s.path, project:p.path});
+}
+
+const COLS = [
+  {id:"store", label:"~/.agents/skills", group:"Shared store"},
+  ...P.map(p => ({id:p.id, label:p.aliases[0]||p.id, group:"Claude profiles", sub:p.account?.email})),
+  ...A.map(a => ({id:a.id, label:a.label, group:"Other agents"})),
+  {id:"projects", label:"Projects", group:"Project level"},
+];
+const byName = {};
+for (const i of instances) (byName[i.name] ??= []).push(i);
+const names = Object.keys(byName).sort();
+
+/* per-profile visibility conflicts: the same name reachable twice inside one profile */
+const conflicts = []; // {profile, name, items}
+for (const pr of P) {
+  const m = {};
+  for (const i of instances) if (i.col === pr.id && i.via !== "off") (m[i.name] ??= []).push(i);
+  for (const [n, items] of Object.entries(m)) if (items.length > 1) conflicts.push({profile:pr.id, name:n, items});
+}
+const conflictKey = new Set(conflicts.map(c => c.profile + "|" + c.name));
+
+/* physical copies: same name, several real (non-symlink, non-plugin-cache) folders */
+const physical = names.map(n => {
+  const real = byName[n].filter(i => ["own","gstack","proj","store"].includes(i.via)); // synced skills are managed by claude.ai
+  const hashes = new Set(real.map(i => i.hash));
+  return {name:n, real, hashes:hashes.size};
+}).filter(x => x.real.length > 1);
+
+/* ───────────── cleanup suggestions ───────────── */
+function buildIssues() {
+  const out = [];
+  for (const pr of P) {
+    for (const pl of pr.plugins) if (pl.enabled && !pl.installed)
+      out.push({sev:"bad", t:`${pr.id}: plugin “${pl.id}” is enabled but not installed`, d:`Listed in ${pr.dir}/settings.json enabledPlugins, but absent from installed_plugins.json. Remove the entry or reinstall.`, cmd:`CLAUDE_CONFIG_DIR=${pr.dir} claude plugin install ${pl.id}   # or delete the key from enabledPlugins`});
+    for (const st of pr.stale) out.push({sev:"info", t:`${pr.id}: leftover backup folder ${st}`, d:`A backup copy of a skills folder that no agent loads.`, cmd:`mv ${pr.dir}/${st} ~/.Trash/`});
+    const shadow = conflicts.filter(c => c.profile === pr.id);
+    if (shadow.length) {
+      const lines = shadow.map(c => `${c.name.padEnd(30)} ${c.items.map(i => i.via==="plugin" ? `plugin:${i.plugin}` : i.via).join("  +  ")}`);
+      out.push({sev:"warn", t:`${pr.id}: ${plural(shadow.length,"skill")} reachable twice`, d:`The same skill name is loaded from more than one place in this profile (for example a user skill plus a plugin skill). Claude sees both, which wastes context and makes it unclear which one runs. Keep one source.`, pre:lines.join("\n")});
+    }
+    // local copies that mirror a plugin available elsewhere
+    const copies = pr.skills.filter(s => !s.link && hashOwner[s.hash]?.startsWith("plugin "));
+    if (copies.length) {
+      const by = {}; for (const s of copies) (by[hashOwner[s.hash]] ??= []).push(s.name);
+      for (const [src, list] of Object.entries(by))
+        out.push({sev:"warn", t:`${pr.id}: ${plural(list.length,"skill")} ${verb(list.length,"is a hand copy","are hand copies")} of ${src}`, d:`These folders in ${pr.dir}/skills are byte-identical to ${src}. Installing the plugin in this profile (or symlinking) keeps them in sync instead of drifting.`, pre:list.join(", ")});
+    }
+  }
+  const nonProj = x => x.real.filter(i => i.via !== "proj");
+  const diverged = physical.filter(x => nonProj(x).length > 1 && new Set(nonProj(x).map(i => i.hash)).size > 1);
+  if (diverged.length) out.push({sev:"warn", t:`${plural(diverged.length,"skill")} ${verb(diverged.length,"exists","exist")} as different versions in different places`, d:`Same folder name, different SKILL.md content, outside projects. Decide which one is current.`, pre:diverged.map(x => `${x.name.padEnd(30)} ${x.real.filter(i=>i.via!=="proj").map(i => i.col+"("+i.hash.slice(0,6)+")").join("  ")}`).join("\n")});
+  const identical = physical.filter(x => { const r = x.real.filter(i => i.via !== "proj" && i.via !== "store"); return r.length > 1 && new Set(r.map(i => i.hash)).size === 1; });
+  if (identical.length) out.push({sev:"info", t:`${plural(identical.length,"skill")} ${verb(identical.length,"is an identical copy","are identical copies")} in several user folders`, d:`Candidates to move into ~/.agents/skills once and symlink, or to install as a plugin.`, pre:identical.map(x => `${x.name.padEnd(30)} ${x.real.filter(i=>i.via!=="proj"&&i.via!=="store").map(i=>i.col).join(", ")}`).join("\n")});
+  // project skills that are also installed user-level for a profile that uses that project
+  const projDup = [];
+  for (const p of PR) for (const s of [...(p.skills||[]), ...(p.agentsSkills||[])]) {
+    const users = p.usedBy.filter(u => P.some(pr => pr.id === u));
+    const hit = users.filter(u => (byName[s.name]||[]).some(i => i.col === u && i.via !== "off"));
+    if (hit.length) projDup.push({path:p.path, name:s.name, hit});
+  }
+  if (projDup.length) {
+    const g = {}; for (const x of projDup) (g[x.path] ??= new Set()).add(x.name);
+    out.push({sev:"info", t:`${plural(Object.keys(g).length,"project")} ${verb(Object.keys(g).length,"re-ships","re-ship")} skills that are already installed at user level`, d:`${projDup.length} project-level skills (in .claude/skills or .agents/skills) share a name with a user-level skill in a profile that opens that project. Fine if you're pinning a version for the repo; otherwise delete one side.`, pre:Object.entries(g).sort((a,b)=>b[1].size-a[1].size).map(([k,v]) => `${k}  (${v.size})\n    ${[...v].join(", ")}`).join("\n")});
+  }
+  // store skills nobody links to
+  const linked = new Set(instances.filter(i => i.via === "link").map(i => i.name));
+  const orphan = (S.find(s => s.id==="agents")?.skills||[]).filter(s => !linked.has(s.name));
+  if (orphan.length) out.push({sev:"info", t:`${plural(orphan.length,"skill")} in ~/.agents/skills ${verb(orphan.length,"is","are")} not linked into any agent`, d:`Installed in the shared store but no agent's skills folder points at them. Either link them where wanted, or remove with npx skills remove.`, pre:orphan.map(s=>s.name).join(", ")});
+  // plugins installed but disabled
+  for (const pr of P) for (const pl of pr.plugins) if (pl.installed && pl.scope==="user" && pl.enabled===false)
+    out.push({sev:"info", t:`${pr.id}: plugin ${pl.id} installed but disabled`, d:`Takes disk space in ${pr.dir}/plugins but loads nothing. Uninstall if unused.`});
+  // neon config sanity
+  const neon = DATA.clis.find(c => c.id === "neon");
+  if (neon) for (const a of neon.accounts) if (a.expires && new Date(a.expires) < new Date(DATA.generatedAt))
+    out.push({sev:"info", t:`Neon: token in ${a.configDir} expired ${a.expires.replace("T"," ")}`, d:`neonctl refreshes it on next use; run the alias once if it fails.`, cmd:(a.aliases[0]||"neonctl")+" me"});
+  const rank = {bad:0, warn:1, info:2};
+  return out.sort((a, b) => rank[a.sev] - rank[b.sev]);
+}
+const ISSUES = buildIssues();
+const diverged = physical.filter(x => x.hashes > 1);
+const copied = physical.filter(x => x.real.filter(i => i.via !== "store").length > 1);
+let PRESET = null; // filter handed from a summary tile to the skills matrix
+
+/* ───────────── tabs ───────────── */
+const TABS = [
+  ["map","Map"],["skills","Skills matrix",names.length],["profiles","Profiles",P.length],["projects","Projects",PR.filter(interesting).length],["clis","CLIs & accounts",DATA.clis.length],["cleanup","Cleanup",ISSUES.length]
+];
+$("#sub").innerHTML = `Scanned <b>${esc(DATA.host)}</b> at ${esc(DATA.generatedAt.replace("T"," "))}${DATA.live?" · live identity":""} · regenerate with <code>agent-map</code>`;
+$("#banner").innerHTML = DATA.demo
+  ? `<div class="banner"><b>Demo</b> Made-up machine. Run <code>agent-map</code> to map yours.</div>`
+  : DATA.redacted
+  ? `<div class="banner"><b>Redacted</b> Emails, orgs, account ids, profile names and project paths are replaced. Skill, plugin and MCP names are kept.</div>`
+  : "";
+$("#foot").innerHTML = `agent-map ${esc(DATA.version||"")} · read-only scan, nothing left this machine${DATA.redacted||DATA.demo?"":" · this page shows your emails and project paths: share <code>agent-map --redact</code> instead"} · <a href="https://github.com/manghat/agent-map">github.com/manghat/agent-map</a>`;
+function renderTabs(active) {
+  $("#tabs").innerHTML = TABS.map(([id,l,n]) => `<button role="tab" data-t="${id}" aria-selected="${id===active}">${l}${n!=null?`<span class="n">${n}</span>`:""}</button>`).join("");
+  $("#tabs").onclick = e => { const b = e.target.closest("button"); if (b) show(b.dataset.t); };
+}
+function show(id) {
+  renderTabs(id);
+  try { localStorage.setItem("agentmap-tab", id); } catch {}
+  history.replaceState(null, "", "#" + id);
+  $("#main").innerHTML = "";
+  ({map:renderMap, skills:renderSkills, profiles:renderProfiles, projects:renderProjects, clis:renderClis, cleanup:renderCleanup})[id]();
+}
+
+/* ───────────── Map ───────────── */
+function countVia(col) {
+  const c = {};
+  for (const i of instances) if (i.col === col) c[i.via] = (c[i.via]||0) + 1;
+  return c;
+}
+const VIA = {store:"shared store", link:"symlink → store", own:"own folder", gstack:"gstack", synced:"claude.ai synced", plugin:"plugin", off:"disabled plugin", proj:"project"};
+function viaBar(c) {
+  const tot = Object.values(c).reduce((a,b)=>a+b,0) || 1;
+  const col = {link:"var(--c-link)", own:"var(--c-own)", gstack:"var(--c-gstack)", synced:"var(--c-synced)", plugin:"var(--c-plugin)", off:"var(--line)", store:"var(--c-store)", proj:"var(--c-proj)"};
+  return `<div class="bar">${Object.entries(c).map(([k,v]) => `<i title="${VIA[k]}: ${v}" style="width:${v/tot*100}%;background:${col[k]}"></i>`).join("")}</div>`;
+}
+function renderMap() {
+  const m = $("#main");
+  const places = new Set(instances.filter(i => i.via !== "off").map(i => i.col)).size;
+  const twice = new Set(conflicts.map(c => c.name)).size;
+  const tile = (n, label, go, warn) => `<a href="#" data-go="${go}" class="${warn && n ? "warn" : ""}"><b>${n}</b><span>${label}</span></a>`;
+  m.innerHTML = `<div class="hero">
+    ${tile(names.length, `skills across ${plural(places, "place")}`, "skills:all")}
+    ${tile(P.length, `Claude ${P.length === 1 ? "profile" : "profiles"}${A.length ? ` + ${plural(A.length, "other agent")}` : ""}`, "profiles")}
+    ${tile(twice, "loaded twice in one profile", "skills:conflict", true)}
+    ${tile(diverged.length, "with different versions", "skills:diverged", true)}
+    ${tile(copied.length, "copied by hand", "skills:copies", true)}
+    ${tile(ISSUES.length, "cleanup suggestions", "cleanup", true)}
+  </div>
+  <h2>How everything connects</h2>
+  <p class="hint">Left: where skills come from. Middle: each Claude profile (its own login, settings, plugins, skills) and the other agent CLIs. Right: MCP servers and service plugins each one can reach. Hover a box to trace its links.</p>
+  <div class="diagram" id="diag"></div>
+  <h2>Claude profiles</h2>
+  <p class="hint">Each profile is a separate <code>CLAUDE_CONFIG_DIR</code>: separate account, settings, plugins, skills and history. Nothing is shared between them unless it's a symlink into <code>~/.agents/skills</code>.</p>
+  <div class="grid cards">${P.map(profileCard).join("")}</div>
+  <h2>Other agent CLIs</h2>
+  <div class="grid cards">${A.map(agentCard).join("")}</div>
+  <h2>Shared stores</h2>
+  <div class="grid cards">${S.map(st => `<div class="card"><h3 class="mono">${esc(st.label)}</h3><div class="meta">${esc(st.note)}</div>
+     <div class="stat"><div><b>${st.id==="gstack" ? instances.filter(i=>i.via==="gstack").length : st.skills.length}</b>skills</div>
+     ${st.id==="agents"?`<div><b>${new Set(instances.filter(i=>i.via==="link").map(i=>i.col)).size}</b>consumers</div>`:""}</div></div>`).join("")}</div>`;
+  drawDiagram($("#diag"));
+  m.querySelector(".hero").onclick = e => {
+    const a = e.target.closest("a[data-go]"); if (!a) return;
+    e.preventDefault();
+    const [tab, f] = a.dataset.go.split(":");
+    PRESET = f || null;
+    show(tab);
+  };
+}
+function profileCard(p) {
+  const c = countVia(p.id);
+  const on = p.plugins.filter(x => x.scope==="user" && x.enabled && x.installed);
+  return `<div class="card">
+    <h3>${esc(p.id)} ${p.default && p.id!=="default"?'<span class="chip">default</span>':""}</h3>
+    <div class="meta mono">${esc(p.dir)}</div>
+    <div class="meta">launch: ${p.aliases.length ? p.aliases.map(a=>`<code><b>${esc(a)}</b></code>`).join(", ") : `<code>CLAUDE_CONFIG_DIR=${esc(p.dir)} claude</code>`}</div>
+    <dl class="kv"><dt>Account</dt><dd>${p.account?`<span class="chip acct">${esc(p.account.email)}</span>`:"<span class='muted'>not logged in</span>"}</dd>
+    ${p.account?.org && !p.account.org.includes(p.account.email)?`<dt>Org</dt><dd>${esc(p.account.org)}</dd>`:""}
+    <dt>Model</dt><dd>${esc(p.model||"default")}</dd>
+    <dt>Plugins</dt><dd>${on.map(x=>`<span class="chip plugin">${esc(x.name)}</span>`).join("")||"<span class='muted'>none</span>"}</dd>
+    <dt>MCP</dt><dd>${p.mcpUser.map(x=>`<span class="chip">${esc(x)}</span>`).join("")||"<span class='muted'>none (user)</span>"}</dd></dl>
+    <div class="stat"><div title="skills in ${esc(p.dir)}/skills"><b>${p.skills.length}</b>own</div><div title="synced from claude.ai"><b>${p.synced.length}</b>synced</div><div title="skills from enabled plugins"><b>${on.reduce((a,x)=>a+x.skills.length,0)}</b>plugin</div><div><b>${p.projects.length}</b>projects</div></div>
+    ${viaBar(c)}
+  </div>`;
+}
+function agentCard(a) {
+  return `<div class="card"><h3>${esc(a.label)}</h3><div class="meta mono">${esc(a.dir)}</div>
+    <dl class="kv">${a.account?.email?`<dt>Account</dt><dd><span class="chip acct">${esc(a.account.email)}</span></dd>`:""}
+    ${a.account?.auth?`<dt>Auth</dt><dd>${esc(a.account.auth)}</dd>`:""}
+    <dt>Skills from</dt><dd class="mono">${a.skillDirs.map(esc).join("<br>")||"—"}</dd>
+    <dt>MCP</dt><dd>${a.mcp.map(x=>`<span class="chip">${esc(x)}</span>`).join("")||"—"}</dd>
+    ${a.plugins.length?`<dt>Plugins</dt><dd>${a.plugins.map(x=>`<span class="chip plugin">${esc(x)}</span>`).join("")}</dd>`:""}</dl>
+    <div class="stat"><div><b>${a.skills.length}</b>skills</div>${a.projects.length?`<div><b>${a.projects.length}</b>projects</div>`:""}</div>${viaBar(countVia(a.id))}</div>`;
+}
+
+function drawDiagram(host) {
+  // nodes
+  const sources = [];
+  const agentsStore = S.find(s=>s.id==="agents");
+  if (agentsStore) sources.push({id:"s:store", label:"~/.agents/skills", sub:`${agentsStore.skills.length} skills · npx skills`, color:"var(--c-store)"});
+  if (instances.some(i=>i.via==="gstack")) sources.push({id:"s:gstack", label:"gstack", sub:"real folders in ~/.claude/skills", color:"var(--c-gstack)"});
+  if (instances.some(i=>i.via==="synced")) sources.push({id:"s:synced", label:"claude.ai synced", sub:"per account", color:"var(--c-synced)"});
+  const markets = [...new Set(P.flatMap(p => p.plugins.filter(x=>x.installed).map(x=>x.marketplace)))];
+  for (const mk of markets) sources.push({id:"s:m:"+mk, label:mk, sub:"plugin marketplace", color:"var(--c-plugin)"});
+  sources.push({id:"s:own", label:"hand-made / copied", sub:"real folders in a skills dir", color:"var(--c-own)"});
+
+  const mids = [...P.map(p => ({id:"a:"+p.id, label:(p.aliases[0]||p.id), sub:p.account?.email||"—", color:"var(--accent)"})),
+                ...A.map(a => ({id:"a:"+a.id, label:a.label, sub:a.account?.email||a.dir, color:"var(--muted)"}))];
+
+  const svcSet = {};
+  const addSvc = (agent, name, kind) => { const k = name.toLowerCase().replace(/[-_ ]?(mcp|server)$/,""); (svcSet[k] ??= {label:name, kinds:new Set(), agents:new Set()}); svcSet[k].kinds.add(kind); svcSet[k].agents.add(agent); };
+  for (const p of P) {
+    for (const m of p.mcpUser) addSvc(p.id, m, "MCP");
+    for (const pl of p.plugins) if (pl.scope==="user" && pl.enabled && pl.installed) { for (const m of pl.mcp) addSvc(p.id, m, "plugin MCP"); if (["vercel","posthog","figma","supabase","playwright","neon","github","linear","sentry","stripe"].includes(pl.name)) addSvc(p.id, pl.name, "plugin"); }
+  }
+  for (const a of A) for (const m of a.mcp) addSvc(a.id, m, "MCP");
+  const svcs = Object.entries(svcSet).sort((a,b)=>b[1].agents.size-a[1].agents.size).map(([k,v]) => ({id:"v:"+k, label:v.label, sub:[...v.kinds].join(" · "), agents:v.agents, color:"var(--c-synced)"}));
+
+  // edges
+  const edges = [];
+  const agentIds = [...P.map(p=>p.id), ...A.map(a=>a.id)];
+  for (const a of agentIds) {
+    const its = instances.filter(i => i.col === a && i.via !== "off");
+    const cnt = (f) => its.filter(f).length;
+    const add = (src, n) => n && edges.push({from:src, to:"a:"+a, n});
+    add("s:store", cnt(i => i.via==="link"));
+    add("s:gstack", cnt(i => i.via==="gstack"));
+    add("s:synced", cnt(i => i.via==="synced"));
+    add("s:own", cnt(i => i.via==="own"));
+    const pr = P.find(p => p.id===a);
+    if (pr) for (const mk of markets) add("s:m:"+mk, pr.plugins.filter(x => x.marketplace===mk && x.scope==="user" && x.enabled && x.installed).length ? cnt(i => i.via==="plugin" && pr.plugins.some(x => x.name===i.plugin && x.marketplace===mk)) || 0.5 : 0);
+  }
+  for (const s of svcs) for (const a of s.agents) edges.push({from:"a:"+a, to:s.id, n:1});
+
+  const W = 1180, colX = [20, 440, 900], nodeW = [250, 280, 260], H0 = 40, gap = 10, nh = 42;
+  const place = (arr, x, w) => arr.forEach((n, i) => Object.assign(n, {x, y:H0 + i*(nh+gap), w, h:nh}));
+  place(sources, colX[0], nodeW[0]); place(mids, colX[1], nodeW[1]); place(svcs, colX[2], nodeW[2]);
+  // vertically centre shorter columns
+  const H = Math.max(sources.length, mids.length, svcs.length) * (nh+gap) + H0 + 10;
+  for (const arr of [sources, mids, svcs]) { const off = (H - H0 - arr.length*(nh+gap)) / 2; arr.forEach(n => n.y += off); }
+  const all = Object.fromEntries([...sources, ...mids, ...svcs].map(n => [n.id, n]));
+  const maxN = Math.max(...edges.map(e=>e.n), 1);
+  const edgeSvg = edges.filter(e => all[e.from] && all[e.to]).map((e, k) => {
+    const a = all[e.from], b = all[e.to];
+    const x1 = a.x + a.w, y1 = a.y + a.h/2, x2 = b.x, y2 = b.y + b.h/2, mx = (x1+x2)/2;
+    const w = e.n <= 1 ? 1.5 : 1.5 + 6 * Math.log(e.n)/Math.log(maxN);
+    return `<path class="e" data-a="${a.id}" data-b="${b.id}" d="M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}" stroke="${a.color}" stroke-width="${w.toFixed(1)}"/>` +
+      (e.n >= 1 && a.id.startsWith("s:") ? `<text class="el" data-a="${a.id}" data-b="${b.id}" x="${x2-6}" y="${y2-4}" text-anchor="end">${Math.round(e.n)}</text>` : "");
+  }).join("");
+  const nodeSvg = Object.values(all).map(n => `<g class="n" data-id="${n.id}"><title>${esc(n.label)}\n${esc(n.sub)}</title>
+     <rect class="node" x="${n.x}" y="${n.y}" width="${n.w}" height="${n.h}" rx="7"/>
+     <rect x="${n.x}" y="${n.y}" width="4" height="${n.h}" rx="2" fill="${n.color}"/>
+     <text x="${n.x+12}" y="${n.y+17}">${esc(trunc(n.label, 34))}</text>
+     <text class="sm" x="${n.x+12}" y="${n.y+32}">${esc(trunc(n.sub, 42))}</text></g>`).join("");
+  host.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Skill sources, agents and services">
+    <text class="col" x="${colX[0]}" y="22">Skill sources</text><text class="col" x="${colX[1]}" y="22">Claude profiles · agents</text><text class="col" x="${colX[2]}" y="22">MCP servers · services</text>
+    ${edgeSvg}${nodeSvg}</svg>`;
+  const svg = host.firstElementChild;
+  svg.addEventListener("mouseover", e => {
+    const g = e.target.closest("g.n"); if (!g) return;
+    const id = g.dataset.id;
+    svg.querySelectorAll("path.e,text.el").forEach(p => { const on = p.dataset.a===id || p.dataset.b===id; p.classList.toggle("hot", on); p.classList.toggle("dim", !on); });
+    svg.querySelectorAll("g.n").forEach(n => n.classList.toggle("hot", n===g));
+  });
+  svg.addEventListener("mouseleave", () => svg.querySelectorAll(".hot,.dim").forEach(p => p.classList.remove("hot","dim")));
+}
+const trunc = (s, n) => (s = String(s||"")).length > n ? s.slice(0, n-1) + "…" : s;
+
+/* ───────────── Skills matrix ───────────── */
+function renderSkills() {
+  const m = $("#main");
+  m.innerHTML = `<h2>Every skill, everywhere</h2>
+  <p class="hint">One row per skill name. Each column is a place skills load from. Amber cells mean the same skill is reachable twice inside that profile. Hover a marker for its path.</p>
+  <div class="legend">
+    <span><i class="dot store">S</i>in shared store</span><span><i class="dot link">L</i>symlink → store</span><span><i class="dot own">C</i>own folder / copy</span>
+    <span><i class="dot gstack">G</i>gstack</span><span><i class="dot synced">Y</i>claude.ai synced</span><span><i class="dot plugin">P</i>via plugin</span>
+    <span><i class="dot off">P</i>plugin disabled</span><span><i class="dot proj">#</i>project-level (count)</span></div>
+  <div class="toolbar"><input type="search" id="q" placeholder="Filter skills…">
+    <select id="f"><option value="all">All skills</option><option value="multi">In 2+ places</option><option value="conflict">Reachable twice in a profile</option><option value="copies">Has hand copies</option><option value="diverged">Different versions</option><option value="single">Only in one place</option></select>
+    <select id="src"><option value="">Any source</option>${Object.entries(VIA).map(([k,v])=>`<option value="${k}">${v}</option>`).join("")}</select>
+    <label class="tog"><input type="checkbox" id="hidePlug"> hide plugin-only skills</label>
+    <span class="muted small" id="cnt"></span></div>
+  <div class="tablewrap"><table id="mx"></table></div>`;
+  const draw = () => {
+    const q = $("#q").value.trim().toLowerCase(), f = $("#f").value, src = $("#src").value, hidePlug = $("#hidePlug").checked;
+    const rows = names.filter(n => {
+      const it = byName[n];
+      if (q && !n.toLowerCase().includes(q) && !it.some(i => (i.plugin||"").includes(q))) return false;
+      if (src && !it.some(i => i.via === src)) return false;
+      if (hidePlug && it.every(i => i.via === "plugin" || i.via === "off")) return false;
+      const places = new Set(it.map(i => i.col + "|" + i.via)).size;
+      if (f === "multi" && places < 2) return false;
+      if (f === "single" && places > 1) return false;
+      if (f === "conflict" && !P.some(p => conflictKey.has(p.id+"|"+n))) return false;
+      if (f === "copies" && !(physical.find(x => x.name===n)?.real.filter(i=>i.via!=="store").length > 1)) return false;
+      if (f === "diverged" && !(physical.find(x => x.name===n)?.hashes > 1)) return false;
+      return true;
+    });
+    $("#cnt").textContent = `${rows.length} of ${names.length}`;
+    let lastGroup = null;
+    const head = `<thead><tr><th class="name">skill</th>${COLS.map(c => `<th class="rot" title="${esc(c.group)}${c.sub?" · "+esc(c.sub):""}"><span>${esc(c.label)}</span></th>`).join("")}<th>notes</th></tr></thead>`;
+    const body = rows.map(n => {
+      const it = byName[n];
+      const hashes = new Set(it.filter(i=>["own","gstack","proj","store","synced"].includes(i.via)).map(i=>i.hash));
+      const cells = COLS.map(c => {
+        const here = it.filter(i => i.col === c.id);
+        if (!here.length) return `<td class="cell"></td>`;
+        const cls = conflictKey.has(c.id+"|"+n) ? "cell conflict" : "cell";
+        if (c.id === "projects") {
+          const tip = here.map(i => i.where).join("\n");
+          return `<td class="${cls}"><span class="dot proj" title="${esc(tip)}">${here.length}</span></td>`;
+        }
+        return `<td class="${cls}">${here.map(i => `<span class="dot ${i.via}" title="${esc(VIA[i.via]+" · "+i.where+(i.detail?"\n"+i.detail:"")+"\n"+i.path+"\nsha "+i.hash)}">${({store:"S",link:"L",own:"C",gstack:"G",synced:"Y",plugin:"P",off:"P",proj:"#"})[i.via]}</span>`).join("")}</td>`;
+      }).join("");
+      const plugs = [...new Set(it.filter(i=>i.plugin).map(i=>i.plugin))];
+      const notes = [plugs.map(p=>`<span class="chip plugin">${esc(p)}</span>`).join(""), hashes.size>1?`<span class="chip warn">${hashes.size} versions</span>`:""].join("");
+      const desc = it.find(i => i.via!=="off")?.path;
+      return `<tr><td class="name" title="${esc(descOf(n))}">${esc(n)}</td>${cells}<td>${notes}</td></tr>`;
+    }).join("");
+    $("#mx").innerHTML = head + `<tbody>${body}</tbody>`;
+  };
+  ["q","f","src","hidePlug"].forEach(id => $("#"+id).addEventListener("input", draw));
+  if (PRESET) { $("#f").value = PRESET; PRESET = null; }
+  draw();
+}
+const descCache = {};
+function descOf(n) {
+  if (descCache[n] != null) return descCache[n];
+  const pools = [S.flatMap(s=>s.skills), P.flatMap(p=>[...p.skills,...p.synced,...p.plugins.flatMap(x=>x.skills)]), A.flatMap(a=>a.skills), PR.flatMap(p=>[...(p.skills||[]),...(p.agentsSkills||[])])].flat();
+  return descCache[n] = (pools.find(s => s.name===n && s.desc)?.desc || "");
+}
+
+/* ───────────── Profiles ───────────── */
+function renderProfiles() {
+  const m = $("#main");
+  m.innerHTML = P.map(p => {
+    const groups = {link:[], gstack:[], own:[]};
+    for (const s of p.skills) groups[viaFor(s)].push(s);
+    const plug = p.plugins;
+    return `<h2>${esc(p.id)} <span class="muted small mono">${esc(p.dir)}</span></h2>
+    <div class="split">
+      <div class="card"><h3>Identity & settings</h3>
+        <dl class="kv"><dt>Launch with</dt><dd class="mono">${p.aliases.map(esc).join(", ")||"—"}</dd>
+        <dt>Account</dt><dd>${p.account?`<span class="chip acct">${esc(p.account.email)}</span> ${esc(p.account.org||"")}`:"—"}</dd>
+        <dt>Model</dt><dd>${esc(p.model||"default")}</dd>
+        <dt>Hooks</dt><dd>${p.hooks.map(h=>`<span class="chip">${esc(h)}</span>`).join("")||"—"}</dd>
+        <dt>CLAUDE.md</dt><dd>${p.claudeMd?"yes":"no"}${p.memory?" · has memory/":""}</dd>
+        <dt>Marketplaces</dt><dd>${p.marketplaces.map(x=>`<span class="chip">${esc(x)}</span>`).join("")||"—"}</dd>
+        <dt>User MCP</dt><dd>${p.mcpUser.map(x=>`<span class="chip">${esc(x)}</span>`).join("")||"—"}</dd>
+        <dt>Agents</dt><dd>${p.agents.map(x=>`<span class="chip">${esc(x)}</span>`).join("")||"—"}</dd>
+        <dt>Commands</dt><dd>${p.commands.map(x=>`<span class="chip">${esc(x)}</span>`).join("")||"—"}</dd></dl></div>
+      <div class="card"><h3>Plugins</h3>
+        <table><thead><tr><th>plugin</th><th>scope</th><th>state</th><th>skills</th><th>cmds</th><th>agents</th></tr></thead><tbody>
+        ${plug.map(x => `<tr><td><b>${esc(x.name)}</b><div class="muted small">${esc(x.marketplace)} ${esc(x.version||"")}</div></td>
+          <td>${x.scope==="project"?`<span class="chip proj" title="${esc(x.projectPath)}">project</span><div class="muted small mono">${esc(trunc(x.projectPath,40))}</div>`:"user"}</td>
+          <td>${!x.installed?'<span class="chip bad">not installed</span>':x.scope!=="user"?'<span class="chip">in project</span>':x.enabled?'<span class="chip ok">enabled</span>':'<span class="chip warn">disabled</span>'}</td>
+          <td>${x.skills.length}</td><td>${x.commands.length}</td><td>${x.agents.length}</td></tr>`).join("") || `<tr><td colspan=6 class="muted">none</td></tr>`}
+        </tbody></table></div>
+    </div>
+    <div class="card" style="margin-top:12px"><h3>User skills <span class="muted small mono">${esc(p.dir)}/skills</span></h3>
+      ${[["link","Symlinked from ~/.agents/skills","store"],["gstack","gstack","gstack"],["own","Own folders","own"]].map(([k,l,c]) => groups[k].length?`<div style="margin-top:8px"><div class="muted small">${l} · ${groups[k].length}</div><div class="pill-row">${groups[k].map(s=>`<span class="chip ${c} ${conflictKey.has(p.id+"|"+s.name)?"warn":""}" title="${esc(s.desc)}${hashOwner[s.hash]&&!s.link?"\n= copy of "+esc(hashOwner[s.hash]):""}">${esc(s.name)}</span>`).join("")}</div></div>`:"").join("") || '<span class="muted">none</span>'}
+      ${p.synced.length?`<div style="margin-top:8px"><div class="muted small">claude.ai synced · ${p.synced.length}</div><div class="pill-row">${p.synced.map(s=>`<span class="chip synced" title="${esc(s.desc)}">${esc(s.name)}</span>`).join("")}</div></div>`:""}
+    </div>
+    <details><summary>${plural(p.projects.length,"project")} opened with this profile</summary><div class="mono small" style="margin-top:6px">${p.projects.map(esc).join("<br>")}</div></details>`;
+  }).join("");
+}
+
+/* ───────────── Projects ───────────── */
+function interesting(p) {
+  return (p.skills?.length||p.agentsSkills?.length||p.commands?.length||p.agents?.length||p.enabledPlugins?.length||p.mcpJson?.length||Object.keys(p.mcpLocal||{}).length||p.vercel||p.neon||p.projectPlugins?.length||p.hooks?.length);
+}
+function renderProjects() {
+  const m = $("#main");
+  const missing = DATA.projects.filter(p => !p.exists);
+  m.innerHTML = `<h2>Projects</h2>
+  <p class="hint">Every folder any profile or Codex has opened. Project-level config lives in the repo (<code>.claude/</code>, <code>.agents/skills</code>, <code>.mcp.json</code>, <code>.vercel/</code>) and applies to <em>whichever</em> profile opens it; “local MCP” is stored inside that profile's <code>.claude.json</code> and only applies there.</p>
+  <div class="toolbar"><input type="search" id="pq" placeholder="Filter by path, skill, service…">
+    <label class="tog"><input type="checkbox" id="pall"> include projects with no project-level config</label>
+    <select id="pby"><option value="">Used by any</option>${[...P.map(p=>p.id),...A.map(a=>a.id)].map(x=>`<option>${esc(x)}</option>`).join("")}</select>
+    <span class="muted small" id="pcnt"></span></div>
+  <div class="tablewrap"><table><thead><tr><th>project</th><th>used by</th><th>skills</th><th>plugins</th><th>MCP</th><th>Vercel</th><th>Neon</th><th>docs</th></tr></thead><tbody id="pt"></tbody></table></div>
+  ${missing.length?`<details><summary>${plural(missing.length,"remembered project")} no longer on disk (stale entries in .claude.json)</summary><div class="mono small" style="margin-top:6px">${missing.map(p=>esc(p.path)+" <span class='muted'>("+p.usedBy.join(", ")+")</span>").join("<br>")}</div></details>`:""}`;
+  const draw = () => {
+    const q = $("#pq").value.trim().toLowerCase(), all = $("#pall").checked, by = $("#pby").value;
+    const rows = PR.filter(p => (all || interesting(p)) && (!by || p.usedBy.includes(by)) && (!q || JSON.stringify(p).toLowerCase().includes(q)));
+    $("#pcnt").textContent = `${rows.length} shown`;
+    $("#pt").innerHTML = rows.map(p => {
+      const sk = [...(p.skills||[]).map(s=>[s,".claude"]), ...(p.agentsSkills||[]).map(s=>[s,".agents"])];
+      const local = Object.entries(p.mcpLocal||{}).map(([pr, list]) => list.map(x=>`<span class="chip" title="local to profile ${esc(pr)}">${esc(x)} <span class="muted">@${esc(pr)}</span></span>`).join("")).join("");
+      return `<tr><td class="mono" style="min-width:240px">${esc(p.path)}${p.isHome?' <span class="chip">home</span>':""}</td>
+        <td>${p.usedBy.map(u=>`<span class="chip ${P.some(x=>x.id===u)?"acct":""}">${esc(u)}</span>`).join("")}</td>
+        <td>${sk.length?`<details><summary>${(p.skills||[]).length} .claude · ${(p.agentsSkills||[]).length} .agents</summary><div class="pill-row">${sk.map(([s,w])=>`<span class="chip proj" title="${esc(w)}/skills · ${esc(s.desc)}">${esc(s.name)}</span>`).join("")}</div></details>`:""}
+          ${(p.commands||[]).length?`<div class="small muted">${p.commands.length} commands</div>`:""}${(p.agents||[]).length?`<div class="small muted">${p.agents.length} agents</div>`:""}</td>
+        <td>${[...(p.enabledPlugins||[]).map(x=>`<span class="chip plugin">${esc(x.split("@")[0])}</span>`), ...(p.projectPlugins||[]).map(x=>`<span class="chip plugin" title="installed by ${esc(x.profile)}">${esc(x.id.split("@")[0])} <span class="muted">@${esc(x.profile)}</span></span>`)].join("")}</td>
+        <td>${(p.mcpJson||[]).map(x=>`<span class="chip" title=".mcp.json (shared)">${esc(x)}</span>`).join("")}${local}</td>
+        <td>${p.vercel?`<span class="chip ok" title="${esc(p.vercel.orgId||"")}">${esc(p.vercel.projectName||"linked")}</span>`:""}</td>
+        <td>${p.neon?(p.neon.endpoints.map(e=>`<span class="chip mono">${esc(e)}</span>`).join("") + (p.neon.context?`<span class="chip">.neon ctx</span>`:"")):""}</td>
+        <td class="small">${[p.claudeMd&&"CLAUDE.md", p.agentsMd&&"AGENTS.md", p.git&&"git", p.supabase&&"supabase", p.convex&&"convex"].filter(Boolean).join(" · ")}</td></tr>`;
+    }).join("");
+  };
+  ["pq","pall","pby"].forEach(id => $("#"+id).addEventListener("input", draw));
+  draw();
+}
+
+/* ───────────── CLIs ───────────── */
+function renderClis() {
+  const m = $("#main");
+  const neonUsers = {};
+  for (const p of PR) for (const e of (p.neon?.endpoints||[])) (neonUsers[e] ??= []).push(p.path);
+  m.innerHTML = `<h2>Cloud & dev CLIs</h2>
+  <p class="hint">Which account each CLI is logged in as, and which shell alias pins it. Credentials are never read — only file locations and account ids.${DATA.live?"":" Run <code>agent-map --live</code> to resolve emails and usernames."}</p>
+  <div class="grid cards">${DATA.clis.map(c => `<div class="card"><h3>${esc(c.label)}</h3><div class="meta mono">${esc(c.bin||"not on PATH")}</div>
+     ${c.note?`<p class="muted small" style="margin:6px 0 0">${esc(c.note)}</p>`:""}
+     ${c.accounts.map(a => `<dl class="kv" style="border-top:1px solid var(--line);padding-top:8px">
+        <dt>Profile</dt><dd><b>${esc(a.label)}</b>${a.active?' <span class="chip ok">active</span>':""}${a.loggedIn===false?' <span class="chip warn">not logged in</span>':""}</dd>
+        ${a.email||a.user||a.login?`<dt>Identity</dt><dd><span class="chip acct">${esc(a.email||a.user||a.login)}</span></dd>`:""}
+        ${a.configDir?`<dt>Config</dt><dd class="mono">${esc(a.configDir)}</dd>`:""}
+        ${a.userId?`<dt>User id</dt><dd class="mono">${esc(a.userId)}</dd>`:""}
+        ${a.aliases?.length?`<dt>Alias</dt><dd class="mono">${a.aliases.map(esc).join(", ")}</dd>`:""}
+        ${a.pinnedProject?`<dt>Pinned project</dt><dd class="mono">${esc(a.pinnedProject)}</dd>`:""}
+        ${a.project?`<dt>Project</dt><dd class="mono">${esc(a.project)}</dd>`:""}
+        ${a.currentTeam?`<dt>Current team</dt><dd class="mono">${esc(a.currentTeam)}</dd>`:""}
+        ${a.expires?`<dt>Token exp.</dt><dd>${esc(a.expires.replace("T"," "))}</dd>`:""}
+        ${a.liveError?`<dt>Live</dt><dd class="small muted">${esc(a.liveError)}</dd>`:""}
+        ${a.status?`<dt>Status</dt><dd class="small muted mono" style="white-space:pre-wrap">${esc(a.status)}</dd>`:""}
+     </dl>`).join("") || '<p class="muted small">No accounts found.</p>'}</div>`).join("")}</div>
+  <h2>Who can touch which database / deployment</h2>
+  <div class="split">
+   <div class="card"><h3>Neon endpoints referenced by projects</h3><p class="muted small" style="margin:2px 0 8px">Endpoint ids found in each project's <code>.env*</code> files (only the host part is kept). Compare them with <code>neonctl projects list</code> per account to see which login owns each database.</p>
+     ${Object.keys(neonUsers).length?`<table><tbody>${Object.entries(neonUsers).map(([e, ps]) => `<tr><td class="mono">${esc(e)}</td><td class="mono small">${ps.map(esc).join("<br>")}</td></tr>`).join("")}</tbody></table>`:'<span class="muted">none</span>'}
+     <p class="muted small">Agents with a Neon MCP server: ${[...P.filter(p=>p.mcpUser.some(x=>/neon/i.test(x))).map(p=>p.id), ...A.filter(a=>a.mcp.some(x=>/neon/i.test(x))).map(a=>a.id), ...PR.flatMap(p=>(p.mcpJson||[]).filter(x=>/neon/i.test(x)).map(()=>p.path))].map(x=>`<span class="chip">${esc(x)}</span>`).join("")}</p></div>
+   <div class="card"><h3>Vercel-linked projects</h3>
+     ${PR.filter(p=>p.vercel).length?`<table><tbody>${PR.filter(p=>p.vercel).map(p => `<tr><td><b>${esc(p.vercel.projectName)}</b></td><td class="mono small">${esc(p.path)}</td><td class="mono small muted">${esc(p.vercel.orgId||"")}</td></tr>`).join("")}</tbody></table>`:'<span class="muted">none</span>'}
+     <p class="muted small">Profiles with the Vercel plugin: ${P.filter(p=>p.plugins.some(x=>x.name==="vercel"&&x.enabled)).map(p=>`<span class="chip">${esc(p.id)}</span>`).join("")}</p></div>
+  </div>
+  <h2>Relevant shell aliases</h2>
+  <div class="tablewrap" style="max-height:none"><table><tbody>${Object.entries(DATA.aliases).map(([k,v])=>`<tr><td class="mono"><b>${esc(k)}</b></td><td class="mono small">${esc(v)}</td></tr>`).join("")}</tbody></table></div>`;
+}
+
+/* ───────────── Cleanup ───────────── */
+function renderCleanup() {
+  const m = $("#main");
+  m.innerHTML = `<h2>Cleanup suggestions</h2>
+  <p class="hint">Generated from the scan; nothing is changed automatically. Commands are suggestions — check before running.</p>
+  <div class="issues">${ISSUES.map(i => {
+    const lines = (i.pre||"").split("\n").length;
+    const pre = !i.pre ? "" : lines > 8
+      ? `<details><summary>Show all ${lines} lines</summary><pre>${esc(i.pre)}</pre></details>`
+      : `<pre>${esc(i.pre)}</pre>`;
+    const cmd = i.cmd ? `<pre><button class="copy" data-cmd="${esc(i.cmd)}">copy</button>${esc(i.cmd)}</pre>` : "";
+    return `<div class="issue ${i.sev}"><h4>${esc(i.t)}</h4><p>${esc(i.d)}</p>${pre}${cmd}</div>`;
+  }).join("") || '<p class="muted">Nothing to clean up.</p>'}</div>`;
+  m.onclick = e => {
+    const b = e.target.closest("button.copy"); if (!b) return;
+    navigator.clipboard?.writeText(b.dataset.cmd).then(() => { b.textContent = "copied"; setTimeout(() => b.textContent = "copy", 1200); },
+      () => { b.textContent = "select & copy"; });
+  };
+}
+
+let start = location.hash.slice(1);
+try { start ||= localStorage.getItem("agentmap-tab"); } catch {}
+show(TABS.some(t => t[0]===start) ? start : "map");
+</script>
+</body>
+</html>
