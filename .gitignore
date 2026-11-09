@@ -1,10 +1,5 @@
-__pycache__/
-*.pyc
-*.egg-info/
-build/
-dist/
-.venv/
+node_modules/
+*.tgz
 # generated maps contain personal data
 index.html
 data.json
-!agent_map/template.html

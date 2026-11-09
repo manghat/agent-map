@@ -6,10 +6,16 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest]
-        python: ["3.9", "3.13"]
+        node: [18, 20, 22, 24]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v6
-      - run: uv run --no-project --python ${{ matrix.python }} python -m unittest discover -s tests -v
-      - run: uvx --python ${{ matrix.python }} --from . agent-map --demo --no-open -o "$RUNNER_TEMP/demo.html"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - run: npm test
+      - name: run the packed tarball the way npx would
+        run: |
+          TGZ=$(npm pack --silent)
+          npx --yes --package="./$TGZ" agent-map --demo --no-open -o "$RUNNER_TEMP/demo.html"
+          test -s "$RUNNER_TEMP/demo.html"

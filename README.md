@@ -7,11 +7,11 @@ If you use Claude Code with more than one account, plus Codex, Cursor or Gemini,
 ![agent-map on a demo machine](docs/demo-map.png)
 
 ```bash
-uvx --from git+https://github.com/manghat/agent-map agent-map --demo   # try it on a made-up machine
-uvx --from git+https://github.com/manghat/agent-map agent-map          # map yours
+npx agent-map --demo   # try it on a made-up machine
+npx agent-map          # map yours
 ```
 
-No dependencies beyond Python 3.9+. Nothing is uploaded: it reads config files and writes one HTML file.
+Needs Node 18+ and nothing else: no dependencies, no install. Nothing is uploaded; it reads config files and writes one HTML file.
 
 ## What you get
 
@@ -24,36 +24,23 @@ No dependencies beyond Python 3.9+. Nothing is uploaded: it reads config files a
 
 ![cleanup suggestions](docs/demo-cleanup.png)
 
-## Install
-
-```bash
-# run without installing
-uvx --from git+https://github.com/manghat/agent-map agent-map
-
-# or install the command
-pipx install git+https://github.com/manghat/agent-map
-# or
-uv tool install git+https://github.com/manghat/agent-map
-
-# or from a clone
-git clone https://github.com/manghat/agent-map && cd agent-map && python3 -m agent_map
-```
-
 ## Usage
 
 ```
-agent-map              scan and open the map (~/.agent-map/index.html)
-agent-map --redact     replace emails, orgs, account ids, profile names, hostname and project paths
-agent-map --demo       map a made-up machine instead of yours
-agent-map --live       also ask neonctl / vercel / gh who is logged in (network calls)
-agent-map --no-open    write the file without opening a browser
-agent-map --json       print the raw scan
-agent-map -o FILE      write somewhere else
+npx agent-map              scan and open the map (~/.agent-map/index.html)
+npx agent-map --redact     replace emails, orgs, account ids, profile names, hostname and project paths
+npx agent-map --demo       map a made-up machine instead of yours
+npx agent-map --live       also ask neonctl / vercel / gh who is logged in (network calls)
+npx agent-map --no-open    write the file without opening a browser
+npx agent-map --json       print the raw scan
+npx agent-map -o FILE      write somewhere else
 ```
+
+Run it often? `npm i -g agent-map` gives you a plain `agent-map` command.
 
 ## Sharing a screenshot
 
-The normal map shows your emails, org names and every project path. **Use `agent-map --redact` before you screenshot or share it.** Redaction swaps emails for `user1@example.com`, profiles for `profile-2`, projects for `~/projects/project-07`, removes skill descriptions and account ids, and keeps skill, plugin and MCP server names. It is best-effort: a skill or MCP server named after a client will still show, so look before you post.
+The normal map shows your emails, org names and every project path. **Use `npx agent-map --redact` before you screenshot or share it.** Redaction swaps emails for `user1@example.com`, profiles for `profile-2`, projects for `~/projects/project-07`, removes skill descriptions and account ids, and keeps skill, plugin and MCP server names. It is best-effort: a skill or MCP server named after a client will still show, so look before you post.
 
 ## What it reads
 
@@ -77,11 +64,11 @@ macOS and Linux. Windows isn't tested.
 ## Development
 
 ```bash
-python3 -m unittest discover -s tests   # tests build a fake home with agent_map/demo.py
-python3 -m agent_map --demo             # look at the page while you change agent_map/template.html
+npm test                 # node:test; tests build a fake home with src/demo.js
+node bin/agent-map.js --demo   # look at the page while you change src/template.html
 ```
 
-The scanner (`agent_map/scan.py`) produces one JSON document. The page (`agent_map/template.html`) is a single self-contained file that renders it, with no network requests. New agents usually take one `add(...)` call in `other_agents()`.
+`src/scan.js` produces one JSON document. `src/template.html` is a single self-contained page that renders it, with no network requests. A new agent usually takes one `add(...)` call in `otherAgents()`.
 
 ## License
 

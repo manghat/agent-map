@@ -1,0 +1,39 @@
+{
+  "name": "agent-map",
+  "version": "0.3.0",
+  "description": "See every Claude Code profile, skill, plugin, MCP server and CLI login on your machine, in one local HTML map.",
+  "type": "module",
+  "bin": {
+    "agent-map": "bin/agent-map.js"
+  },
+  "files": [
+    "bin",
+    "src"
+  ],
+  "engines": {
+    "node": ">=18.17"
+  },
+  "scripts": {
+    "test": "node --test",
+    "demo": "node bin/agent-map.js --demo"
+  },
+  "keywords": [
+    "claude-code",
+    "claude",
+    "agent-skills",
+    "skills",
+    "mcp",
+    "codex",
+    "cursor",
+    "gemini-cli",
+    "developer-tools"
+  ],
+  "author": "Ashwin Manghat",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/manghat/agent-map.git"
+  },
+  "homepage": "https://github.com/manghat/agent-map#readme",
+  "bugs": "https://github.com/manghat/agent-map/issues"
+}

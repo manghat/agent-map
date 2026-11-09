@@ -276,13 +276,13 @@ let PRESET = null; // filter handed from a summary tile to the skills matrix
 const TABS = [
   ["map","Map"],["skills","Skills matrix",names.length],["profiles","Profiles",P.length],["projects","Projects",PR.filter(interesting).length],["clis","CLIs & accounts",DATA.clis.length],["cleanup","Cleanup",ISSUES.length]
 ];
-$("#sub").innerHTML = `Scanned <b>${esc(DATA.host)}</b> at ${esc(DATA.generatedAt.replace("T"," "))}${DATA.live?" · live identity":""} · regenerate with <code>agent-map</code>`;
+$("#sub").innerHTML = `Scanned <b>${esc(DATA.host)}</b> at ${esc(DATA.generatedAt.replace("T"," "))}${DATA.live?" · live identity":""} · regenerate with <code>npx agent-map</code>`;
 $("#banner").innerHTML = DATA.demo
-  ? `<div class="banner"><b>Demo</b> Made-up machine. Run <code>agent-map</code> to map yours.</div>`
+  ? `<div class="banner"><b>Demo</b> Made-up machine. Run <code>npx agent-map</code> to map yours.</div>`
   : DATA.redacted
   ? `<div class="banner"><b>Redacted</b> Emails, orgs, account ids, profile names and project paths are replaced. Skill, plugin and MCP names are kept.</div>`
   : "";
-$("#foot").innerHTML = `agent-map ${esc(DATA.version||"")} · read-only scan, nothing left this machine${DATA.redacted||DATA.demo?"":" · this page shows your emails and project paths: share <code>agent-map --redact</code> instead"} · <a href="https://github.com/manghat/agent-map">github.com/manghat/agent-map</a>`;
+$("#foot").innerHTML = `agent-map ${esc(DATA.version||"")} · read-only scan, nothing left this machine${DATA.redacted||DATA.demo?"":" · this page shows your emails and project paths: share <code>npx agent-map --redact</code> instead"} · <a href="https://github.com/manghat/agent-map">github.com/manghat/agent-map</a>`;
 function renderTabs(active) {
   $("#tabs").innerHTML = TABS.map(([id,l,n]) => `<button role="tab" data-t="${id}" aria-selected="${id===active}">${l}${n!=null?`<span class="n">${n}</span>`:""}</button>`).join("");
   $("#tabs").onclick = e => { const b = e.target.closest("button"); if (b) show(b.dataset.t); };
@@ -582,7 +582,7 @@ function renderClis() {
   const neonUsers = {};
   for (const p of PR) for (const e of (p.neon?.endpoints||[])) (neonUsers[e] ??= []).push(p.path);
   m.innerHTML = `<h2>Cloud & dev CLIs</h2>
-  <p class="hint">Which account each CLI is logged in as, and which shell alias pins it. Credentials are never read — only file locations and account ids.${DATA.live?"":" Run <code>agent-map --live</code> to resolve emails and usernames."}</p>
+  <p class="hint">Which account each CLI is logged in as, and which shell alias pins it. Credentials are never read — only file locations and account ids.${DATA.live?"":" Run <code>npx agent-map --live</code> to resolve emails and usernames."}</p>
   <div class="grid cards">${DATA.clis.map(c => `<div class="card"><h3>${esc(c.label)}</h3><div class="meta mono">${esc(c.bin||"not on PATH")}</div>
      ${c.note?`<p class="muted small" style="margin:6px 0 0">${esc(c.note)}</p>`:""}
      ${c.accounts.map(a => `<dl class="kv" style="border-top:1px solid var(--line);padding-top:8px">
